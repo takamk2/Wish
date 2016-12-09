@@ -1,0 +1,27 @@
+
+File name
+---------
+MainActivity
+WelcomeFragment
+TopActivity
+WishListActivity
+WishRegisterDialog
+WishDisplayFragment
+WishEditFragment
+
+
+--------------------------------------------------------------------------------
+Variable
+--------
+wish
+price
+created
+modified
+
+--------------------------------------------------------------------------------
+Rule
+----
+Button btXxx
+TextView tvXxx
+EditText etXxx
+
