@@ -7,7 +7,9 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -16,7 +18,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.Random;
+
 import takamk2.local.wish.R;
+import takamk2.local.wish.db.WishDBStore;
 import takamk2.local.wish.fragment.WishListFragment;
 
 public class WishRegisterDialog extends DialogFragment {
@@ -31,6 +36,23 @@ public class WishRegisterDialog extends DialogFragment {
         DialogFragment dialog = WishRegisterDialog.newInstance();
         dialog.show(manager, dialog.getClass().getName());
     }
+
+    /* ------------------------------------------------------------------------------------------ */
+    private View.OnClickListener mOnClickListner = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.bt_ok:
+                    onClickOk();
+                    break;
+                case R.id.bt_cancel:
+                    onClickCancel();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     /* ------------------------------------------------------------------------------------------ */
     @Override
@@ -50,14 +72,30 @@ public class WishRegisterDialog extends DialogFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Todo: DEBUG
         Button btOk = (Button) view.findViewById(R.id.bt_ok);
-        btOk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getActivity(), "Tapped ok", Toast.LENGTH_SHORT).show();
-                dismiss();
-            }
-        });
+        btOk.setOnClickListener(mOnClickListner);
+
+        Button btCancel = (Button) view.findViewById(R.id.bt_cancel);
+        btCancel.setOnClickListener(mOnClickListner);
+    }
+
+    private void onClickOk() {
+        // Todo: register in onActivityResult
+        Random random = new Random();
+        String name = "Dummy " + random.nextInt(1000);
+        long price = random.nextInt(10) * 1000;
+
+        ContentValues values = new ContentValues();
+        values.put(WishDBStore.Wishes.COLUMN_NAME, name);
+        values.put(WishDBStore.Wishes.COLUMN_PRICE, price);
+        Uri newUri = getActivity().getContentResolver().insert(WishDBStore.Wishes.CONTENT_URI, values);
+
+        Toast.makeText(getActivity(), "Tapped ok : id=" + newUri.getLastPathSegment(), Toast.LENGTH_SHORT).show();
+        dismiss();
+    }
+
+    private void onClickCancel() {
+        Toast.makeText(getActivity(), "Tapped cancel", Toast.LENGTH_SHORT).show();
+        dismiss();
     }
 }
