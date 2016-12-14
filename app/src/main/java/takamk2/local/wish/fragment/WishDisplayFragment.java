@@ -4,14 +4,26 @@ package takamk2.local.wish.fragment;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+
+import java.text.NumberFormat;
 
 import takamk2.local.wish.R;
+import takamk2.local.wish.db.WishDBStore;
+import takamk2.local.wish.util.TextUtil;
 import timber.log.Timber;
+
+import static android.R.attr.name;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -20,6 +32,27 @@ public class WishDisplayFragment extends Fragment {
 
     private static final String KEY_POSITION = "position";
     private static final String KEY_ID = "id";
+
+    private TextView mTvName;
+    private TextView mTvPrice;
+    private Button mBtEdit;
+    private Button mBtDelete;
+
+    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.bt_edit:
+                    onClickEdit();
+                    break;
+                case R.id.bt_delete:
+                    onClickDelete();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     public static WishDisplayFragment newInstance() {
         WishDisplayFragment fragment = new WishDisplayFragment();
@@ -68,4 +101,91 @@ public class WishDisplayFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_wish_display, container, false);
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        bindViews(view);
+        bindActions();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        new LoadTask().execute();
+    }
+
+    private void bindViews(View view) {
+        mTvName = (TextView) view.findViewById(R.id.tv_name);
+        mTvPrice = (TextView) view.findViewById(R.id.tv_price);
+        mBtEdit = (Button) view.findViewById(R.id.bt_edit);
+        mBtDelete = (Button) view.findViewById(R.id.bt_delete);
+    }
+
+    private void bindActions() {
+        mBtEdit.setOnClickListener(mOnClickListener);
+        mBtDelete.setOnClickListener(mOnClickListener);
+    }
+
+    private void onClickEdit() {
+
+    }
+
+    private void onClickDelete() {
+
+    }
+
+    private class LoadTask extends AsyncTask<Void, Void, Void> {
+
+        private String mErrorMessage;
+
+        private String mName = "";
+        private long mPrice = 0L;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                doTask();
+            } catch (Exception e) {
+                mErrorMessage = e.toString();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mTvName.setText(mName);
+            mTvPrice.setText(TextUtil.convertCurrency(mPrice));
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+        }
+
+        private void doTask() {
+            String[] projection = {
+                    WishDBStore.Wishes.COLUMN_NAME, WishDBStore.Wishes.COLUMN_PRICE
+            };
+            Uri uri = ContentUris.withAppendedId(WishDBStore.Wishes.CONTENT_URI, mId);
+            Cursor cursor = null;
+            try {
+                cursor = getContext().getContentResolver().query(uri, projection, null, null, null);
+                if (cursor.moveToFirst()) {
+                    mName = cursor.getString(cursor.getColumnIndex(projection[0]));
+                    mPrice = cursor.getLong(cursor.getColumnIndex(projection[1]));
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+
+            }
+        }
+    }
 }
