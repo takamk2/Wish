@@ -24,14 +24,13 @@ import takamk2.local.wish.R;
 import takamk2.local.wish.base.BaseFragment;
 import takamk2.local.wish.db.WishDBStore;
 import takamk2.local.wish.dialog.WishRegisterDialog;
+import takamk2.local.wish.util.AnimationNumber;
+import takamk2.local.wish.util.TextUtil;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class WishListFragment extends BaseFragment
-        implements LoaderManager.LoaderCallbacks<Cursor> {
-
-    private WishesAdapter mWishesAdapter;
+public class WishListFragment extends BaseFragment {
 
     public static WishListFragment newInstance() {
         WishListFragment fragment = new WishListFragment();
@@ -44,12 +43,15 @@ public class WishListFragment extends BaseFragment
         FragmentManager manager = activity.getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         Fragment fragment = WishListFragment.newInstance();
-        transaction.replace(R.id.fragment_container, fragment, fragment.getClass().getName());
+        transaction.replace(R.id.fragment_container2, fragment, fragment.getClass().getName());
         transaction.addToBackStack(null);
         transaction.commit();
     }
 
     /* ------------------------------------------------------------------------------------------ */
+    private WishesAdapter mWishesAdapter;
+
+    private TextView mTvTotalPrice;
     private Button mBtAdd;
     private ListView mLvWishes;
 
@@ -68,11 +70,77 @@ public class WishListFragment extends BaseFragment
 
     private AdapterView.OnItemClickListener mOnItemClickListener =
             new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-            WishDisplayFragment.replaceFragment(getActivity(), position, id);
-        }
-    };
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    WishDisplayFragment.replaceFragment(getActivity(), position, id);
+                }
+            };
+
+    private LoaderManager.LoaderCallbacks<Cursor> mTotalPriceLoaderCallBacks =
+            new LoaderManager.LoaderCallbacks<Cursor>() {
+
+                @Override
+                public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+                    String[] projection = {"sum(" + WishDBStore.Wishes.COLUMN_PRICE + ")"};
+                    return new CursorLoader(mActivity, WishDBStore.Wishes.CONTENT_URI, projection,
+                            null, null, null);
+                }
+
+                @Override
+                public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+                    if (cursor.moveToFirst()) {
+                        long totalPrice = cursor.getLong(0);
+                        if (mTvTotalPrice == null) {
+                            return;
+                        }
+                        String oldPriceStr = mTvTotalPrice.getText().toString();
+                        if (oldPriceStr.equals("")) {
+                            mTvTotalPrice.setText(TextUtil.convertNumToCurrency(totalPrice));
+                            return;
+                        }
+                        long oldPrice = TextUtil.extractNumber(oldPriceStr);
+                        new AnimationNumber(oldPrice, totalPrice, new AnimationNumber.CallBack() {
+                            @Override
+                            public void onCall(Long num) {
+                                mTvTotalPrice.setText(TextUtil.convertNumToCurrency(num));
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onLoaderReset(Loader<Cursor> loader) {
+
+                }
+            };
+
+    private LoaderManager.LoaderCallbacks<Cursor> mWishListCallBacks =
+            new LoaderManager.LoaderCallbacks<Cursor>() {
+
+                @Override
+                public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+                    String[] projection = {
+                            WishDBStore.Wishes.COLUMN_ID,
+                            WishDBStore.Wishes.COLUMN_NAME,
+                            WishDBStore.Wishes.COLUMN_PRICE
+                    };
+                    String selection = null;
+                    String[] selectionArgs = null;
+                    String sortOrder = null;
+                    return new CursorLoader(getActivity(), WishDBStore.Wishes.CONTENT_URI,
+                            projection, selection, selectionArgs, sortOrder);
+                }
+
+                @Override
+                public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+                    mWishesAdapter.swapCursor(cursor);
+                }
+
+                @Override
+                public void onLoaderReset(Loader<Cursor> loader) {
+                    mWishesAdapter.swapCursor(null);
+                }
+            };
 
     /* ------------------------------------------------------------------------------------------ */
     public WishListFragment() {
@@ -83,7 +151,8 @@ public class WishListFragment extends BaseFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mWishesAdapter = new WishesAdapter(getActivity());
-        getActivity().getLoaderManager().initLoader(0, null, this);
+        getLoaderManager().initLoader(0, null, mTotalPriceLoaderCallBacks);
+        getLoaderManager().initLoader(1, null, mWishListCallBacks);
     }
 
     @Override
@@ -95,6 +164,7 @@ public class WishListFragment extends BaseFragment
 
     @Override
     protected void bindViews(View view) {
+        mTvTotalPrice = (TextView) view.findViewById(R.id.tv_total_price);
         mBtAdd = (Button) view.findViewById(R.id.bt_add);
         mLvWishes = (ListView) view.findViewById(R.id.lv_wishes);
         mLvWishes.setAdapter(mWishesAdapter);
@@ -107,27 +177,9 @@ public class WishListFragment extends BaseFragment
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String[] projection = {
-                WishDBStore.Wishes.COLUMN_ID,
-                WishDBStore.Wishes.COLUMN_NAME,
-                WishDBStore.Wishes.COLUMN_PRICE
-        };
-        String selection = null;
-        String[] selectionArgs = null;
-        String sortOrder = null;
-        return new CursorLoader(getActivity(), WishDBStore.Wishes.CONTENT_URI,
-                projection, selection, selectionArgs, sortOrder);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        mWishesAdapter.swapCursor(cursor);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        mWishesAdapter.swapCursor(null);
+    public void onResume() {
+        super.onResume();
+        getLoaderManager().getLoader(0).startLoading();
     }
 
     private void onClickAdd() {
@@ -158,7 +210,7 @@ public class WishListFragment extends BaseFragment
             Long price = cursor.getLong(cursor.getColumnIndex(WishDBStore.Wishes.COLUMN_PRICE));
 
             tvName.setText(name);
-            tvPrice.setText(String.valueOf(price)); // Todo: convert currency
+            tvPrice.setText(TextUtil.convertNumToCammaSeparated(price));
         }
     }
 }

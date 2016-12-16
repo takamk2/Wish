@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import takamk2.local.wish.R;
+import takamk2.local.wish.activity.MainActivity;
 import takamk2.local.wish.base.BaseFragment;
 import timber.log.Timber;
 
@@ -31,7 +32,7 @@ public class WelcomeFragment extends BaseFragment {
         FragmentManager manager = activity.getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         Fragment fragment = WelcomeFragment.newInstance();
-        transaction.replace(R.id.fragment_container, fragment, fragment.getClass().getName());
+        transaction.replace(R.id.fragment_container2, fragment, fragment.getClass().getName());
         transaction.addToBackStack(null);
         transaction.commit();
     }
@@ -76,6 +77,12 @@ public class WelcomeFragment extends BaseFragment {
     protected void bindActions() {
         Timber.i("bindActions - start");
         btNext.setOnClickListener(mOnClickListener);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((MainActivity) getActivity()).hideTotalSavingsFragment();
     }
 
     /**

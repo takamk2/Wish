@@ -1,0 +1,21 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    tools:context="takamk2.local.wish.fragment.TotalSavingsFragment">
+
+    <TextView
+        android:id="@+id/tv_total_savings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="32sp"
+        android:gravity="right|center_vertical"
+        android:text="100000" />
+
+    <View
+        android:background="#AAAAAAAA"
+        android:layout_width="match_parent"
+        android:layout_height="1dp" />
+
+</LinearLayout>

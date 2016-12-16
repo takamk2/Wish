@@ -8,6 +8,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
+import takamk2.local.wish.activity.MainActivity;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -32,6 +34,14 @@ public abstract class BaseFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         bindViews(view);
         bindActions();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showTotalSavingsFragment();
+        }
     }
 
     @Override

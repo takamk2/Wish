@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ContentUris;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -15,14 +16,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.NumberFormat;
 
 import takamk2.local.wish.R;
 import takamk2.local.wish.db.WishDBStore;
+import takamk2.local.wish.dialog.DeleteDialog;
 import takamk2.local.wish.util.TextUtil;
 import timber.log.Timber;
 
+import static android.R.attr.finishOnCloseSystemDialogs;
 import static android.R.attr.name;
 
 /**
@@ -32,6 +36,8 @@ public class WishDisplayFragment extends Fragment {
 
     private static final String KEY_POSITION = "position";
     private static final String KEY_ID = "id";
+
+    private static final int REQUEST_DELETE = 1;
 
     private TextView mTvName;
     private TextView mTvPrice;
@@ -70,7 +76,7 @@ public class WishDisplayFragment extends Fragment {
 
         FragmentManager manager = activity.getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment, fragment.getClass().getName());
+        transaction.replace(R.id.fragment_container2, fragment, fragment.getClass().getName());
         transaction.addToBackStack(null);
         transaction.commit();
     }
@@ -90,6 +96,9 @@ public class WishDisplayFragment extends Fragment {
         if (args != null) {
             mPosition = args.getInt(KEY_POSITION);
             mId = args.getLong(KEY_ID);
+        } else {
+            Toast.makeText(getActivity(), "Data does not exist", Toast.LENGTH_SHORT).show();
+            getFragmentManager().popBackStack();
         }
         Timber.i("onCreate - info : position=%d id=%d", mPosition, mId);
     }
@@ -114,6 +123,20 @@ public class WishDisplayFragment extends Fragment {
         new LoadTask().execute();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_DELETE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Uri uri = ContentUris.withAppendedId(WishDBStore.Wishes.CONTENT_URI, mId);
+                getContext().getContentResolver().delete(uri, null, null);
+                Toast.makeText(getActivity(), "Deleted!!", Toast.LENGTH_SHORT).show();
+                getFragmentManager().popBackStack();
+            }
+        }
+    }
+
     private void bindViews(View view) {
         mTvName = (TextView) view.findViewById(R.id.tv_name);
         mTvPrice = (TextView) view.findViewById(R.id.tv_price);
@@ -131,7 +154,7 @@ public class WishDisplayFragment extends Fragment {
     }
 
     private void onClickDelete() {
-
+        DeleteDialog.showDialogForResult(this, REQUEST_DELETE);
     }
 
     private class LoadTask extends AsyncTask<Void, Void, Void> {
@@ -160,7 +183,7 @@ public class WishDisplayFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             mTvName.setText(mName);
-            mTvPrice.setText(TextUtil.convertCurrency(mPrice));
+            mTvPrice.setText(TextUtil.convertNumToCurrency(mPrice));
         }
 
         @Override

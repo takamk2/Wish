@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.Random;
@@ -25,6 +26,11 @@ import takamk2.local.wish.db.WishDBStore;
 import takamk2.local.wish.fragment.WishListFragment;
 
 public class WishRegisterDialog extends DialogFragment {
+
+    private Button mBtOk;
+    private Button mBtCancel;
+    private EditText mEtName;
+    private EditText mEtPrice;
 
     public static WishRegisterDialog newInstance() {
         WishRegisterDialog dialog = new WishRegisterDialog();
@@ -71,27 +77,60 @@ public class WishRegisterDialog extends DialogFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        bindViews(view);
+        bindActions();
+    }
 
-        Button btOk = (Button) view.findViewById(R.id.bt_ok);
-        btOk.setOnClickListener(mOnClickListner);
+    private void bindViews(View view) {
+        mBtOk = (Button) view.findViewById(R.id.bt_ok);
+        mBtCancel = (Button) view.findViewById(R.id.bt_cancel);
+        mEtName = (EditText) view.findViewById(R.id.et_name);
+        mEtPrice = (EditText) view.findViewById(R.id.et_price);
+    }
 
-        Button btCancel = (Button) view.findViewById(R.id.bt_cancel);
-        btCancel.setOnClickListener(mOnClickListner);
+    private void bindActions() {
+        mBtOk.setOnClickListener(mOnClickListner);
+        mBtCancel.setOnClickListener(mOnClickListner);
     }
 
     private void onClickOk() {
-        // Todo: register in onActivityResult
-        Random random = new Random();
-        String name = "Dummy " + random.nextInt(1000);
-        long price = random.nextInt(10) * 1000;
+
+        String name = mEtName.getText().toString();
+        String price = mEtPrice.getText().toString();
 
         ContentValues values = new ContentValues();
         values.put(WishDBStore.Wishes.COLUMN_NAME, name);
         values.put(WishDBStore.Wishes.COLUMN_PRICE, price);
-        Uri newUri = getActivity().getContentResolver().insert(WishDBStore.Wishes.CONTENT_URI, values);
 
-        Toast.makeText(getActivity(), "Tapped ok : id=" + newUri.getLastPathSegment(), Toast.LENGTH_SHORT).show();
-        dismiss();
+        if (checkValues(values)) {
+            getActivity().getContentResolver().insert(WishDBStore.Wishes.CONTENT_URI, values);
+            dismiss();
+        }
+    }
+
+    private boolean checkValues(ContentValues values) {
+
+        boolean isError = false;
+
+        String name = values.getAsString(WishDBStore.Wishes.COLUMN_NAME);
+        if (name == null || name.equals("")) {
+            mEtName.setError("required");
+            isError = true;
+        }
+
+        String price = values.getAsString(WishDBStore.Wishes.COLUMN_PRICE);
+        if (price == null || price.equals("")){
+            isError = true;
+        }
+        if (!price.matches("^\\d+$")) {
+            mEtPrice.setError("invalid");
+            isError = true;
+        }
+        if (!isError) {
+            values.put(WishDBStore.Wishes.COLUMN_PRICE, Long.parseLong(price));
+        }
+
+        return !isError;
     }
 
     private void onClickCancel() {

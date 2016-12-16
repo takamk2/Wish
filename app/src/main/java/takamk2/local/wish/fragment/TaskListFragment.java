@@ -29,7 +29,7 @@ public class TaskListFragment extends BaseFragment {
         FragmentManager manager = activity.getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         Fragment fragment = TaskListFragment.newInstance();
-        transaction.replace(R.id.fragment_container, fragment, fragment.getClass().getName());
+        transaction.replace(R.id.fragment_container2, fragment, fragment.getClass().getName());
         transaction.addToBackStack(null);
         transaction.commit();
     }

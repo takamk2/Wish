@@ -11,6 +11,12 @@
         android:layout_height="wrap_content"
         android:text="add" />
 
+    <TextView
+        android:id="@+id/tv_total_price"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right|center_vertical" />
+
     <ListView
         android:id="@+id/lv_wishes"
         android:layout_width="match_parent"

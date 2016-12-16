@@ -37,7 +37,7 @@ public class TopFragment extends BaseFragment {
         FragmentManager manager = activity.getFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         Fragment fragment = TopFragment.newInstance();
-        transaction.replace(R.id.fragment_container, fragment, fragment.getClass().getName());
+        transaction.replace(R.id.fragment_container2, fragment, fragment.getClass().getName());
         transaction.addToBackStack(null);
         transaction.commit();
     }
