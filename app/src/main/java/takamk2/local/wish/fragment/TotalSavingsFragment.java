@@ -1,21 +1,20 @@
 package takamk2.local.wish.fragment;
 
+import android.app.LoaderManager;
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
-import java.util.Random;
-
 import takamk2.local.wish.R;
 import takamk2.local.wish.base.BaseFragment;
+import takamk2.local.wish.db.WishDBStore;
+import takamk2.local.wish.dialog.SavingsRegisterDialog;
 import takamk2.local.wish.util.AnimationNumber;
 import takamk2.local.wish.util.TextUtil;
 
@@ -24,12 +23,50 @@ import takamk2.local.wish.util.TextUtil;
  */
 public class TotalSavingsFragment extends BaseFragment {
 
-    private TextView mTvTotalSavings;
-
     public static WishListFragment newInstance() {
         WishListFragment fragment = new WishListFragment();
         return fragment;
     }
+
+    /* ------------------------------------------------------------------------------------------ */
+    private TextView mTvTotalSavings;
+
+    public LoaderManager.LoaderCallbacks<Cursor> mTotalSavingsLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+            String[] projection = {"sum(" + WishDBStore.Savings.COLUMN_PRICE + ")"};
+            return new CursorLoader(getActivity(), WishDBStore.Savings.CONTENT_URI, projection,
+                    null, null, null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            if (cursor.moveToFirst()) {
+                long totalSavings = cursor.getLong(0);
+                if (mTvTotalSavings == null) {
+                    return;
+                }
+                String oldSavingsStr = mTvTotalSavings.getText().toString();
+                if (oldSavingsStr.equals("")) {
+                    mTvTotalSavings.setText(TextUtil.convertNumToCurrency(totalSavings));
+                    return;
+                }
+                long oldPrice = TextUtil.extractNumber(oldSavingsStr);
+                new AnimationNumber(oldPrice, totalSavings, new AnimationNumber.CallBack() {
+                    @Override
+                    public void onCall(Long num) {
+                        mTvTotalSavings.setText(TextUtil.convertNumToCurrency(num));
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+
+        }
+    };
 
     /* ------------------------------------------------------------------------------------------ */
     public TotalSavingsFragment() {
@@ -38,6 +75,7 @@ public class TotalSavingsFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getLoaderManager().initLoader(0, null, mTotalSavingsLoaderCallbacks);
     }
 
     @Override
@@ -58,16 +96,23 @@ public class TotalSavingsFragment extends BaseFragment {
         mTvTotalSavings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Random random = new Random();
-                long oldPrice = TextUtil.extractNumber(mTvTotalSavings.getText().toString());
-                long newPrice = oldPrice - random.nextInt(100) * 10;
-                new AnimationNumber(oldPrice, newPrice, new AnimationNumber.CallBack() {
-                    @Override
-                    public void onCall(Long num) {
-                        mTvTotalSavings.setText(TextUtil.convertNumToCammaSeparated(num));
-                    }
-                });
+                SavingsRegisterDialog.showDialog(getActivity());
+//                Random random = new Random();
+//                long oldPrice = TextUtil.extractNumber(mTvTotalSavings.getText().toString());
+//                long newPrice = oldPrice - random.nextInt(100) * 10;
+//                new AnimationNumber(oldPrice, newPrice, new AnimationNumber.CallBack() {
+//                    @Override
+//                    public void onCall(Long num) {
+//                        mTvTotalSavings.setText(TextUtil.convertNumToCammaSeparated(num));
+//                    }
+//                });
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getLoaderManager().getLoader(0).startLoading();
     }
 }
