@@ -19,16 +19,20 @@ public class WishProvider extends ContentProvider {
 
     private static final int CODE_WISHES = 0;
     private static final int CODE_WISH_ITEM = 1;
-    private static final int CODE_SAVINGS = 2;
-    private static final int CODE_SAVINGS_ITEM = 3;
-    private static final int CODE_HISTORIES = 4;
-    private static final int CODE_HISTORY_ITEM = 5;
+    private static final int CODE_TASKS = 2;
+    private static final int CODE_TASK_ITEM = 3;
+    private static final int CODE_SAVINGS = 4;
+    private static final int CODE_SAVINGS_ITEM = 5;
+    private static final int CODE_HISTORIES = 6;
+    private static final int CODE_HISTORY_ITEM = 7;
 
     private static final UriMatcher sUriMatcher;
     static {
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Wishes.TABLE_NAME, CODE_WISHES);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Wishes.TABLE_NAME + "/#", CODE_WISH_ITEM);
+        sUriMatcher.addURI(AUTHORITY, WishDBStore.Tasks.TABLE_NAME, CODE_TASKS);
+        sUriMatcher.addURI(AUTHORITY, WishDBStore.Tasks.TABLE_NAME + "/#", CODE_TASK_ITEM);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Savings.TABLE_NAME, CODE_SAVINGS);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Savings.TABLE_NAME + "/#", CODE_SAVINGS_ITEM);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Histories.TABLE_NAME, CODE_HISTORIES);
@@ -57,6 +61,14 @@ public class WishProvider extends ContentProvider {
                 break;
             case CODE_WISH_ITEM:
                 table = WishDBStore.Wishes.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
+            case CODE_TASKS:
+                table = WishDBStore.Tasks.TABLE_NAME;
+                break;
+            case CODE_TASK_ITEM:
+                table = WishDBStore.Tasks.TABLE_NAME;
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;
@@ -96,6 +108,9 @@ public class WishProvider extends ContentProvider {
             case CODE_WISHES:
                 table = WishDBStore.Wishes.TABLE_NAME;
                 break;
+            case CODE_TASKS:
+                table = WishDBStore.Tasks.TABLE_NAME;
+                break;
             case CODE_SAVINGS:
                 table = WishDBStore.Savings.TABLE_NAME;
                 break;
@@ -127,6 +142,14 @@ public class WishProvider extends ContentProvider {
                 break;
             case CODE_WISH_ITEM:
                 table = WishDBStore.Wishes.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
+            case CODE_TASKS:
+                table = WishDBStore.Tasks.TABLE_NAME;
+                break;
+            case CODE_TASK_ITEM:
+                table = WishDBStore.Tasks.TABLE_NAME;
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;
@@ -169,6 +192,14 @@ public class WishProvider extends ContentProvider {
                 break;
             case CODE_WISH_ITEM:
                 table = WishDBStore.Wishes.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
+            case CODE_TASKS:
+                table = WishDBStore.Tasks.TABLE_NAME;
+                break;
+            case CODE_TASK_ITEM:
+                table = WishDBStore.Tasks.TABLE_NAME;
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;

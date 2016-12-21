@@ -13,7 +13,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class WishDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "wish.db";
-    private static final int DB_VERSION = 4;
+    private static final int DB_VERSION = 5;
 
     public WishDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -22,6 +22,7 @@ public class WishDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(WishDBStore.Wishes.CREATE_TABLE);
+        db.execSQL(WishDBStore.Tasks.CREATE_TABLE);
         db.execSQL(WishDBStore.Savings.CREATE_TABLE);
         db.execSQL(WishDBStore.Histories.CREATE_TABLE);
     }
@@ -29,6 +30,7 @@ public class WishDBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int i, int i1) {
         db.execSQL(WishDBStore.Wishes.DROP_TABLE);
+        db.execSQL(WishDBStore.Tasks.DROP_TABLE);
         db.execSQL(WishDBStore.Savings.DROP_TABLE);
         db.execSQL(WishDBStore.Histories.DROP_TABLE);
         onCreate(db);

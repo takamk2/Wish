@@ -60,6 +60,26 @@ public class WishDBStore {
                 "drop table if exists " + TABLE_NAME;
     }
 
+    public abstract static class Tasks extends BaseColumns2 {
+
+        public static final String TABLE_NAME = "tasks";
+
+        public static final Uri CONTENT_URI = Uri.parse("content://"+AUTHORITY+"/"+TABLE_NAME);
+
+        public static final String COLUMN_ID = BaseColumns._ID;
+        public static final String COLUMN_TITLE = "title";
+        public static final String COLUMN_PRICE = "price";
+
+        public static final String CREATE_TABLE =
+                "create table " + TABLE_NAME + " ( " +
+                        COLUMN_ID + " integer primary key autoincrement, " +
+                        COLUMN_TITLE + " text not null, " +
+                        COLUMN_PRICE + " integer not null " +
+                        ");";
+        public static final String DROP_TABLE =
+                "drop table if exists " + TABLE_NAME;
+    }
+
     public abstract static class Histories extends BaseColumns2 {
 
         public static final String TABLE_NAME = "histories";
