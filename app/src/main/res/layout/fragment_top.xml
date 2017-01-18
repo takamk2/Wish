@@ -6,6 +6,12 @@
     tools:context="takamk2.local.wish.fragment.TopFragment">
 
     <Button
+        android:id="@+id/bt_to_daily"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daily" />
+
+    <Button
         android:id="@+id/bt_to_wish_list"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

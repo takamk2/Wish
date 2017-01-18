@@ -12,6 +12,8 @@ import android.provider.BaseColumns;
 
 import takamk2.local.wish.db.WishDBHelper;
 import takamk2.local.wish.db.WishDBStore;
+import takamk2.local.wish.util.DateUtil;
+import timber.log.Timber;
 
 import static takamk2.local.wish.db.WishDBStore.BaseColumns2.AUTHORITY;
 
@@ -25,6 +27,8 @@ public class WishProvider extends ContentProvider {
     private static final int CODE_SAVINGS_ITEM = 5;
     private static final int CODE_HISTORIES = 6;
     private static final int CODE_HISTORY_ITEM = 7;
+    private static final int CODE_DAILY = 8;
+    private static final int CODE_DAILY_ITEM = 9;
 
     private static final UriMatcher sUriMatcher;
     static {
@@ -37,6 +41,8 @@ public class WishProvider extends ContentProvider {
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Savings.TABLE_NAME + "/#", CODE_SAVINGS_ITEM);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Histories.TABLE_NAME, CODE_HISTORIES);
         sUriMatcher.addURI(AUTHORITY, WishDBStore.Histories.TABLE_NAME + "/#", CODE_HISTORY_ITEM);
+        sUriMatcher.addURI(AUTHORITY, WishDBStore.Daily.TABLE_NAME, CODE_DAILY);
+        sUriMatcher.addURI(AUTHORITY, WishDBStore.Daily.TABLE_NAME + "/#", CODE_DAILY_ITEM);
     }
 
     private SQLiteOpenHelper mHelper;
@@ -88,6 +94,14 @@ public class WishProvider extends ContentProvider {
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;
+            case CODE_DAILY:
+                table = WishDBStore.Daily.TABLE_NAME;
+                break;
+            case CODE_DAILY_ITEM:
+                table = WishDBStore.Daily.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
             default:
                 throw new IllegalArgumentException("uri does not matches");
         }
@@ -110,12 +124,17 @@ public class WishProvider extends ContentProvider {
                 break;
             case CODE_TASKS:
                 table = WishDBStore.Tasks.TABLE_NAME;
+                values.put(WishDBStore.Tasks.COLUMN_CREATED, DateUtil.getNowDateTime().getTimeInMillis());
                 break;
             case CODE_SAVINGS:
                 table = WishDBStore.Savings.TABLE_NAME;
                 break;
             case CODE_HISTORIES:
                 table = WishDBStore.Histories.TABLE_NAME;
+                break;
+            case CODE_DAILY:
+                table = WishDBStore.Daily.TABLE_NAME;
+                values.put(WishDBStore.Daily.COLUMN_CREATED, DateUtil.getNowDateTime().getTimeInMillis());
                 break;
             default:
                 throw new IllegalArgumentException("uri does not matches");
@@ -169,6 +188,14 @@ public class WishProvider extends ContentProvider {
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;
+            case CODE_DAILY:
+                table = WishDBStore.Daily.TABLE_NAME;
+                break;
+            case CODE_DAILY_ITEM:
+                table = WishDBStore.Daily.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
             default:
                 throw new IllegalArgumentException("uri does not matches");
         }
@@ -216,6 +243,14 @@ public class WishProvider extends ContentProvider {
                 break;
             case CODE_HISTORY_ITEM:
                 table = WishDBStore.Histories.TABLE_NAME;
+                selection = BaseColumns._ID + " = ?";
+                selectionArgs = new String[]{uri.getLastPathSegment()};
+                break;
+            case CODE_DAILY:
+                table = WishDBStore.Daily.TABLE_NAME;
+                break;
+            case CODE_DAILY_ITEM:
+                table = WishDBStore.Daily.TABLE_NAME;
                 selection = BaseColumns._ID + " = ?";
                 selectionArgs = new String[]{uri.getLastPathSegment()};
                 break;
@@ -278,13 +313,55 @@ public class WishProvider extends ContentProvider {
             }
         }
 
-        // Todo: DEBUG
-        total_task_price = 1600L;
+        // Todo: Providerにjoinしたtableを作れないかな？
+        String sql = "select sum(" + WishDBStore.Tasks.COLUMN_PRICE + ") from "
+                + WishDBStore.Daily.TABLE_NAME
+                + " left join " + WishDBStore.Tasks.TABLE_NAME
+                + " on " + WishDBStore.Daily.TABLE_NAME + "." + WishDBStore.Daily.COLUMN_TASK_ID
+                + " = " + WishDBStore.Tasks.TABLE_NAME + "." + WishDBStore.Tasks.COLUMN_ID;
+        cursor = null;
+        try {
+            cursor = db.rawQuery(sql, null);
+            if (cursor.moveToFirst()) {
+                total_task_price = cursor.getLong(0);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        // DEBUG
+        projection = new String[]{
+                WishDBStore.Daily.COLUMN_ID,
+                WishDBStore.Daily.COLUMN_TASK_ID,
+                WishDBStore.Daily.COLUMN_COMPLETED,
+                WishDBStore.Daily.COLUMN_CREATED
+        };
+        cursor = null;
+        try {
+            cursor = getContext().getContentResolver().query(WishDBStore.Daily.CONTENT_URI,
+                    projection, null, null, WishDBStore.Daily.COLUMN_ID + " desc");
+            if (cursor.moveToFirst()) {
+                do {
+                    Timber.i("DEBUG: id=%d taskId=%d completed=%d create=%d",
+                    cursor.getLong(0),
+                    cursor.getLong(1),
+                    cursor.getLong(2),
+                    cursor.getLong(3));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
 
         ContentValues values = new ContentValues();
         values.put(WishDBStore.Histories.COLUMN_TOTAL_SAVINGS, total_savings);
         values.put(WishDBStore.Histories.COLUMN_TOTAL_WISH_PRICE, total_wish_price);
-        values.put(WishDBStore.Histories.COLUMN_TOTAL_TASK_PRICE, total_task_price); // Todo: TBD
+        values.put(WishDBStore.Histories.COLUMN_TOTAL_TASK_PRICE, total_task_price);
         values.put(WishDBStore.Histories.COLUMN_CREATED, System.currentTimeMillis());
         db.insert(WishDBStore.Histories.TABLE_NAME, null, values);
         getContext().getContentResolver().notifyChange(WishDBStore.Histories.CONTENT_URI, null);

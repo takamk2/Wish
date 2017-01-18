@@ -4,9 +4,6 @@ package takamk2.local.wish.fragment;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -17,9 +14,6 @@ import android.widget.Toast;
 
 import takamk2.local.wish.R;
 import takamk2.local.wish.base.BaseFragment;
-import takamk2.local.wish.db.WishDBHelper;
-import takamk2.local.wish.db.WishDBStore;
-import timber.log.Timber;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,6 +37,7 @@ public class TopFragment extends BaseFragment {
     }
 
     /* ------------------------------------------------------------------------------------------ */
+    private Button mBtToDaily;
     private Button mBtToWishList;
     private Button mBtToTaskList;
     private Button mBtToSummary;
@@ -52,6 +47,9 @@ public class TopFragment extends BaseFragment {
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
+                case R.id.bt_to_daily:
+                    onClickToDaily();
+                    break;
                 case R.id.bt_to_wish_list:
                     onClickToWishList();
                     break;
@@ -81,6 +79,7 @@ public class TopFragment extends BaseFragment {
 
     @Override
     protected void bindViews(View view) {
+        mBtToDaily = (Button) view.findViewById(R.id.bt_to_daily);
         mBtToWishList = (Button) view.findViewById(R.id.bt_to_wish_list);
         mBtToTaskList = (Button) view.findViewById(R.id.bt_to_task_list);
         mBtToSummary = (Button) view.findViewById(R.id.bt_to_summary);
@@ -88,9 +87,14 @@ public class TopFragment extends BaseFragment {
 
     @Override
     protected void bindActions() {
+        mBtToDaily.setOnClickListener(mOnClickListener);
         mBtToWishList.setOnClickListener(mOnClickListener);
         mBtToTaskList.setOnClickListener(mOnClickListener);
         mBtToSummary.setOnClickListener(mOnClickListener);
+    }
+
+    private void onClickToDaily() {
+        DailyFragment.replaceFragment(getActivity());
     }
 
     private void onClickToWishList() {
